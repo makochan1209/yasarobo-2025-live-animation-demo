@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>45deg reveal (fixed content width)</title>
+    <style>
+        :root {
+            /* ここでパネルの実幅を決めておく。必要ならここを変える */
+            --panel-width: 520px;
+            --panel-mask-width: max(160vh, calc(1.6 * var(--panel-width)));
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+        }
+
+        .wrapper {
+            max-width: var(--panel-width);
+            margin: 0 auto;
+        }
+
+        /* 親。ここに .active を付け外しするだけ */
+        .diagonal-box {
+            position: relative;
+            width: 100%;
+        }
+
+        /* ① 高さを出すためのレイヤー（表示しない） */
+        .diagonal-box__layout {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .diagonal-box__layout-inner {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .05);
+            padding: 20px 22px;
+            box-sizing: border-box;
+        }
+
+        /* ② 実際に見せるレイヤー */
+        .diagonal-box__viewport {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            border-radius: 14px;
+        }
+
+        /* 斜めに動く「マスクだけ」大きくする。ここは200vmaxでOK */
+        .diagonal-box__wipe-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--panel-mask-width);
+            /* ここが大きくてもOK。マスクだから */
+            height: 0;
+            transform: translate(-50%, -50%) rotate(45deg);
+            transform-origin: center;
+            overflow: hidden;
+            animation: diag-hide 0.6s ease-in-out forwards;
+        }
+
+        /* 表示時 */
+        .diagonal-box.active .diagonal-box__wipe-wrapper {
+            animation: diag-show 0.6s ease-in-out forwards;
+        }
+
+        /* 非表示時 */
+        .diagonal-box:not(.active) .diagonal-box__wipe-wrapper {
+            animation: diag-hide 0.6s ease-in-out forwards;
+        }
+
+        /* 中身本体：ここで「本来の幅」に固定するのが重要！ */
+        .diagonal-box__content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--panel-width);
+            /* ←マスクがでかくても中身はこの幅 */
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .05);
+            box-sizing: border-box;
+            padding: 20px 22px;
+
+            /* 回転を元に戻す */
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        /* 表示アニメ */
+        @keyframes diag-show {
+            0% {
+                height: 0;
+                visibility: visible;
+            }
+
+            100% {
+                height: var(--panel-mask-width);
+                visibility: visible;
+            }
+        }
+
+        /* 非表示アニメ */
+        @keyframes diag-hide {
+            0% {
+                height: var(--panel-mask-width);
+                visibility: visible;
+            }
+
+            99% {
+                height: 0;
+                visibility: visible;
+            }
+
+            100% {
+                height: 0;
+                visibility: hidden;
+            }
+        }
+
+        /* 中の装飾 */
+        .title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .text {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .child-box {
+            background: #eef4ff;
+            border: 1px solid #dbe4ff;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: .85rem;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-bottom: 16px;
+            padding: 6px 12px;
+            border: 1px solid #333;
+            background: #fff;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* スマホで画面より広いときは縮める */
+        @media (max-width: 600px) {
+            :root {
+                --panel-width: min(100vw - 40px, 520px);
+            }
+
+            .wrapper {
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="btn" onclick="document.querySelector('.diagonal-box').classList.toggle('active')">
+            .active をトグル
+        </div>
+
+        <div class="diagonal-box active">
+            <!-- ① 高さだけ出す層（同じ中身） -->
+            <div class="diagonal-box__layout">
+                <div class="diagonal-box__layout-inner">
+                    <div class="title">45°で開くパネル</div>
+                    <p class="text">
+                        マスクだけが200vmaxで超でかく、内容の幅は --panel-width で固定しているので、
+                        「マスクがでかすぎて中身もでかくなる」問題は起きません。
+                    </p>
+                    <p class="text">
+                        y = x 方向(45°)で広がります。長方形でも角度は崩れません。
+                    </p>
+                    <div class="child-box">子divです。</div>
+                </div>
+            </div>
+
+            <!-- ② 斜めにマスクして見せる本体 -->
+            <div class="diagonal-box__viewport">
+                <div class="diagonal-box__wipe-wrapper">
+                    <div class="diagonal-box__content">
+                        <div class="title">45°で開くパネル</div>
+                        <p class="text">
+                            マスクだけが200vmaxで超でかく、内容の幅は --panel-width で固定しているので、
+                            「マスクがでかすぎて中身もでかくなる」問題は起きません。
+                        </p>
+                        <p class="text">
+                            y = x 方向(45°)で広がります。長方形でも角度は崩れません。
+                        </p>
+                        <div class="child-box">子divです。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>
